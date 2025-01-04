@@ -1,0 +1,24 @@
+{
+  "name": "finaldrilling_m7",
+  "version": "1.0.0",
+  "description": "Final drilling modulo 7 \"Acceso de datos en aplicaciones node\". Desarrollo Back End aplicacion gestion de cursos con node y sequelize. ",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "node",
+    "js",
+    "sequelize",
+    "backend",
+    "crud"
+  ],
+  "author": "Nelson Valenzuela",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "sequelize": "^6.37.5"
+  }
+}
