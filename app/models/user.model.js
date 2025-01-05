@@ -5,7 +5,7 @@ const User = db_bootcamp.define('users', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoincrement: true,
+        autoIncrement: true,
         allowNull: false
     },
     firstName: {
