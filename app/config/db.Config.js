@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize";
 config();
 const {USER,HOST,DATABASE,PASSWORD,PORT} = process.env;
 
-const db = new Sequelize(
+const db_bootcamp = new Sequelize(
     DATABASE,
     USER,
     PASSWORD,
@@ -14,4 +14,4 @@ const db = new Sequelize(
     }
 );
 
-export default db;
+export default db_bootcamp;
