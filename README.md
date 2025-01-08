@@ -15,13 +15,13 @@ Este proyecto implementa una solución para la gestión de usuarios y cursos Boo
    ```bash
    git clone https://github.com/soyNelsonValenzuela/Final_Drilling-M7.git
    cd Final_Drilling-M7
-   ````
+   ```
 
 2.	Instala las dependencias necesarias:
 
     ```bash
     npm i
-    ````
+    ```
 
 3.	Configura la base de datos en el archivo config/db.config.js con los detalles de tu entorno.
 
@@ -50,13 +50,13 @@ Ejecuta la conexión con Sequelize y los modelos definidos:
 Ejemplo:
     ```javascript
     const newUser1 = await createUser("Mateo", "Díaz", "mateo.diaz@correo.com");
-    ````
+    ```
 
 1.3 **Crear cursos en la tabla** bootcamps
 Ejemplo:
     ```javascript
     const bootcamp1 = await createBootcamp("Introduciendo el bootcamp de React", 10, "React es la librería más usada en JavaScript para el desarrollo de interfaces.");
-    ````
+    ```
 
 1.4 Asignar usuarios a los cursos
 Ejemplo:
@@ -70,7 +70,7 @@ Ejemplo:
 Ejemplo:
     ```javascript
     await findBootcampById(1);
-    ````
+    ```
 
 2.2 **Listar todos los cursos con sus usuarios asociados**
 Ejemplo:
@@ -88,7 +88,7 @@ Ejemplo:
 Ejemplo:
     ```javascript
     await findAllUsers();
-    ````
+    ```
 
 2.5 **Actualizar un usuario por ID**
 Ejemplo:
