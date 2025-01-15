@@ -2,13 +2,13 @@ import { Sequelize } from "sequelize";
 import User from "../models/user.model.js";
 import Bootcamp from "../models/bootcamp.model.js";
 import db_bootcamp from "../config/db.Config.js";
-export const createUser = async (firstName, lastName, email) => {
+export const createUser = async (user) => {
     const transaction = await db_bootcamp.transaction();
     try {
         const newUser = await User.create({
-            firstName: firstName,
-            lastName: lastName,
-            email: email
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
         },
             { transaction }
         );
@@ -19,100 +19,117 @@ export const createUser = async (firstName, lastName, email) => {
         await transaction.rollback();
     }
 };
-export const findUserById = async (userId) => {
+export const findUserById = async (userData) => {
+    const {id}=userData;
     try {
-        // Buscar el usuario por ID
-        const usuario = await User.findByPk(userId, { logging: false });
+        const usuario = await User.findByPk(id, {
+            include: {
+                model: Bootcamp, // Modelo relacionado
+                attributes: ['id', 'title', 'cue', 'description'], // Campos del usuario a incluir
+                through: { attributes: [] }, // Excluir datos de la tabla intermedia
+            },
+            attributes: ['id', 'firstName', 'lastName', 'email', 'createdAt', 'updatedAt'], // Campos del bootcamp a incluir
+            logging: false,
+        });
+
         if (!usuario) {
-            throw new Error(`No se encontró el usuario con ID ${userId}`);
+            throw new Error(`No se encontró el usuario con ID ${id}`);
         }
-        const bootcamps = await usuario.getBootcamps({ logging: false });
-        if (bootcamps.length === 0) {
-            console.log(`*********************************`);
-            console.log(`El usuario con ID ${userId} no está inscrito en ningún bootcamp.`);
-            console.log(`*********************************`);
-            console.log("");
-        } else {
-            console.log(`*********************************`);
-            console.log(`Bootcamps inscritos por el usuario con ID ${userId}:`);
-            bootcamps.forEach((bootcamp) => {
-                console.log(`- ID: ${bootcamp.id}, Nombre: ${bootcamp.title}`);
-            });
-            console.log(`*********************************`);
-            console.log("");
-        }
+        const result = {
+            id: usuario.id,
+            firstName: usuario.firstName,
+            lastName: usuario.lastName,
+            email: usuario.email,
+            createdAt: usuario.createdAt,
+            updateAt: usuario.updatedAt,
+            bootcamps: usuario.bootcamps.map(bootcamp => ({
+                id: bootcamp.id,
+                title: bootcamp.title,
+                cue: bootcamp.cue
+            }))
+        };
+        console.log(`*********************************`);
+        console.log(JSON.stringify(result, null, 2));
+        return JSON.stringify(result, null, 2);
     } catch (error) {
-        console.error(`Error al obtener los bootcamps del usuario: ${error.message}`);
+        console.error(`Error al obtener la información: ${error.message}`);
+        return { message: `Error al obtener la información: ${error.message}` };
     }
 };
 export const findAllUsers = async () => {
     try {
-        const users = await User.findAll({
+        const usuarios = await User.findAll({
             include: {
                 model: Bootcamp,
                 attributes: ['id', 'title', 'cue', 'description'],
-                through: []
+                through: { attributes: [] },
             },
-            attributes: ['id', 'firstName', 'lastName', 'email'],
-            logging: false
+            attributes: ['id', 'firstName', 'lastName', 'email', 'createdAt', 'updatedAt'],
+            logging: false,
         });
-        if (users.length === 0) {
-            console.log("No se encontraron ususarios en la base de datos");
-        } else {
-            console.log('==== Listado de ususarios y sus bootcamps ====');
-            users.forEach((user) => {
-                console.log(`\n*********************************`);
-                console.log(`Usuario: ${user.firstName} ${user.lastName} (ID: ${user.id})`)
-                console.log(`Email: ${user.email}`);
-                if (user.bootcamps.length === 0) {
-                    console.log('\nEl usuario no esta inscrito en ningún bootcamp ');
-                } else {
-                    console.log('\nBootcamps inscritos:');
-                    user.bootcamps.forEach((bootcamp) => {
-                        console.log(`\n-Bootcamp: ${bootcamp.title} (ID: ${bootcamp.id})`);
-                        console.log(` CUE: ${bootcamp.cue}`);
-                        console.log(` Descripción: ${bootcamp.description}`)
-                    });
-                };
-                console.log(`*********************************`);
-            });
+        if (usuarios.length === 0) {
+            throw new Error("No se encontraron usuarios en la base de datos");
         }
+        const result = usuarios.map(user => {
+            const bootcamps = user.bootcamps.map(bootcamp => ({
+                id: bootcamp.id,
+                title: bootcamp.title,
+                cue: bootcamp.cue
+            }));
+            return {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                ...(bootcamps.length > 0 && { bootcamps })
+            };
+        });
+        console.log(JSON.stringify(result, null, 2));
+        return JSON.stringify(result, null, 2);
     } catch (error) {
-        console.error(`Error al listar usuarios y sus bootcapms: ${error.message}`);
+        console.error(`Error al obtener información: ${error.message}`);
+        return { message: `Error al obtener información: ${error.message}` };
     }
 };
-export const updateUserById = async (id, firstName, lastName, email) => {
+export const updateUserById = async (userdata) => {
+    const { id, firstName, lastName, email } = userdata
     const transaction = await db_bootcamp.transaction({ logging: false });
     try {
         const user = await User.findByPk(id, { logging: false, transaction })
         if (user) {
             const userToUpdate = await User.update({ firstName, lastName, email }, { where: { id: id }, returning: true, logging: false, transaction })
             console.log(`Usuario id: ${id} actualizado exitosamente.`);
+            console.log(JSON.stringify(userToUpdate[1][0].dataValues, null, 2));
             await transaction.commit();
+            return (JSON.stringify(userToUpdate[1][0].dataValues, null, 2))
         } else {
-            console.error(`El usuario con id: ${id} no existe`);
-            await transaction.rollback();
+            throw new Error(`El usuario con id: ${id} no existe`);
         }
     } catch (error) {
-        console.error(`Error al actualizar el usuario id: ${id}: ${error.stack}`);
+        console.error(`Error al actualizar información: ${error.message}`);
         await transaction.rollback();
+        return { message: `Error al actualizar información: ${error.message}` };
     };
 };
-export const deleteUserById = async (id) => {
+export const deleteUserById = async (userData) => {
+    const { id } = userData;
     const transaction = await db_bootcamp.transaction({ logging: false });
     try {
         const user = await User.findByPk(id, { logging: false, transaction });
         if (user) {
             await user.destroy({ logging: false });
             console.log(`Usuario id: ${id} eliminado exitosamente.`);
-
+            console.log(JSON.stringify(user.dataValues,null,2));
             await transaction.commit();
+            return (JSON.stringify(user.dataValues,null,2));
         } else {
-            console.error(`Usuario con id:${id} no existe.`);
-            transaction.rollback();
+            throw new Error(`El usuario con id: ${id} no existe`);
         }
     } catch (error) {
-        console.error(`Error al eliminar el usuario id:${id}: ${error.stack}`);
-        transaction.rollback();
+        console.error(`Error al actualizar información: ${error.message}`);
+        await transaction.rollback();
+        return { message: `Error al actualizar información: ${error.message}` };
     }
 };

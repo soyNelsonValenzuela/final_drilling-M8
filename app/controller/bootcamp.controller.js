@@ -2,7 +2,8 @@ import { Sequelize } from "sequelize";
 import Bootcamp from "../models/bootcamp.model.js";
 import User from "../models/user.model.js";
 import db_bootcamp from "../config/db.Config.js";
-export const createBootcamp = async (title, cue, description) => {
+export const createBootcamp = async (bootcamp) => {
+    const {title,cue,description} = bootcamp;
     const transaccion = await db_bootcamp.transaction();
     try {
         const newBootcamp = await Bootcamp.create({
@@ -19,18 +20,19 @@ export const createBootcamp = async (title, cue, description) => {
         await transaccion.rollback();
     }
 };
-export const addUser = async (userId, bootcampId) => {
+export const addUser = async (userBootcamp) => {
+    const { idUser, idBootcamp} = userBootcamp
     const transaction = await db_bootcamp.transaction({ logging: false });
     try {
-        const usuario = await User.findByPk(userId, { transaction, logging: false });
-        const bootcamp = await Bootcamp.findByPk(bootcampId, { transaction, logging: false });
+        const usuario = await User.findByPk(idUser, { transaction, logging: false });
+        const bootcamp = await Bootcamp.findByPk(idBootcamp, { transaction, logging: false });
         if (!usuario || !bootcamp) {
             throw new Error('Usuario o Bootcamp no encontrado');
         }
         await usuario.addBootcamp(bootcamp, { transaction, logging: false });
         await transaction.commit();
         console.log(`*********************************`);
-        console.log(`Agregado el usuario id=${userId} al bootcamp con id=${bootcampId}.`);
+        console.log(`Agregado el usuario id=${idUser} al bootcamp con id=${idBootcamp}.`);
         console.log(`*********************************`);
         console.log("");
     } catch (error) {
@@ -40,37 +42,44 @@ export const addUser = async (userId, bootcampId) => {
         console.error(`*********************************`);
     }
 };
-export const findBootcampById = async (bootcampId) => {
+export const findBootcampById = async (dataBootcamp) => {
+    const {id}=dataBootcamp;
     try {
-        const bootcamp = await Bootcamp.findByPk(bootcampId, { 
+        const bootcamp = await Bootcamp.findByPk(id, { 
             include: {
                 model: User, // Modelo relacionado
                 attributes: ['id', 'firstName', 'lastName', 'email'], // Campos del usuario a incluir
                 through: { attributes: [] }, // Excluir datos de la tabla intermedia
             },
-            attributes: ['id', 'title','cue', 'description'], // Campos del bootcamp a incluir
-            logging: false });
+            attributes: ['id', 'title', 'cue', 'description','createdAt','updatedAt'], // Campos del bootcamp a incluir
+            logging: false,
+        });
+
         if (!bootcamp) {
-            console.log(`No se encontró el bootcamp con ID ${bootcampId}.`);
-            return null;
+            throw new Error (`No se encontró el bootcamp con ID ${id}.`)
+            //console.log(`No se encontró el bootcamp con ID ${curso.id}.`);
+            //return null;// se podra retornar un error ?
         }
-        console.log(`\n*********************************`);
-        console.log(`Bootcamp: ${bootcamp.title} (ID: ${bootcamp.id})`);
-        console.log(`CUE: ${bootcamp.cue}`);
-        console.log(`Descripción: ${bootcamp.description}`);
-        if (bootcamp.users.length === 0) {
-            console.log('No hay usuarios inscritos en este bootcamp.');
-        } else {
-            console.log('Usuarios inscritos:');
-            bootcamp.users.forEach((user) => {
-                console.log(`  - ID: ${user.id}, Nombre: ${user.firstName} ${user.lastName}, Email: ${user.email}`);
-            });
+        const result = {
+            id: bootcamp.id,
+            title: bootcamp.title,
+            cue: bootcamp.cue,
+            description: bootcamp.description,
+            createdAt: bootcamp.createdAt,
+            updateAt: bootcamp.updatedAt,
+            users: bootcamp.users.map(user => ({
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+            }))
         };
         console.log(`*********************************`);
-        return bootcamp;
+        console.log(JSON.stringify(result,null,2));
+        return JSON.stringify(result,null,2);
     } catch (error) {
-        console.error(`Error al obtener el bootcamp con ID ${bootcampId}: ${error.message}`);
-        return null;
+        console.error(`Error al obtener la información: ${error.message}`);
+        return {message: `Error al obtener la información: ${error.message}`};
     }
 };
 export const findAllBootcamps = async () => {
@@ -78,33 +87,33 @@ export const findAllBootcamps = async () => {
         const bootcamps = await Bootcamp.findAll({
             include: {
                 model: User, // Modelo relacionado
-                attributes: ['id', 'firstName', 'lastName', 'email'], // Campos del usuario a incluir
-                through: { attributes: [] }, // Excluir datos de la tabla intermedia
+                attributes: ['id', 'firstName', 'lastName', 'email'], 
+                through: { attributes: [] }, 
             },
-            attributes: ['id', 'title','cue', 'description'], // Campos del bootcamp a incluir
-            logging: false
+            attributes: ['id', 'title', 'cue', 'description', 'createdAt', 'updatedAt'], 
+            logging: false,
         });
         if (bootcamps.length === 0) {
-            console.log('No se encontraron bootcamps en la base de datos.');
-            return;
-        }
-        console.log('Listado de Bootcamps y sus Usuarios:');
-        bootcamps.forEach((bootcamp) => {
-            console.log(`\n*********************************`);
-            console.log(`Bootcamp: ${bootcamp.title} (ID: ${bootcamp.id})`);
-            console.log(`CUE: ${bootcamp.cue}`);
-            console.log(`Descripción: ${bootcamp.description}`);
-            if (bootcamp.users.length === 0) {
-                console.log('No hay usuarios inscritos en este bootcamp.');
-            } else {
-                console.log('\nUsuarios inscritos:');
-                bootcamp.users.forEach((user) => {
-                    console.log(`  - ID: ${user.id}, Nombre: ${user.firstName} ${user.lastName}, Email: ${user.email}`);
-                });
-            }
-            console.log(`*********************************`);
-        });
+            throw new Error ('No se encontraron bootcamps en la base de datos.')
+        };
+        const result = bootcamps.map(bootcamp => ({
+            id: bootcamp.id,
+            title: bootcamp.title,
+            cue: bootcamp.cue,
+            description: bootcamp.description,
+            createdAt: bootcamp.createdAt,
+            updatedAt: bootcamp.updatedAt,
+            users: bootcamp.users.map(user => ({
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+            })),
+        }));
+        console.log(JSON.stringify(result,null,2));
+        return JSON.stringify(result,null,2);
     } catch (error) {
-        console.error(`Error al listar bootcamps y usuarios: ${error.message}`);
+        console.error(`Error al obtener información: ${error.message}`);
+        return {message: `Error al obtener información: ${error.message}`};
     }
 };

@@ -12,14 +12,14 @@ const User = db_bootcamp.define('users', {
         type: DataTypes.STRING(50),
         allowNull: false,
         validate: {
-            notNull: { "msg": "El campo Nombre firstName es obligatorio" }
+            notNull: { "msg": "El campo firstName es obligatorio" }
         }
     },
     lastName: {
         type: DataTypes.STRING(50),
         allowNull: false,
         validate: {
-            notNull: { "msg": "El campo Nombre lastName es obligatorio" }
+            notNull: { "msg": "El campo lastName es obligatorio" }
         }
     },
     email: {
@@ -33,9 +33,11 @@ const User = db_bootcamp.define('users', {
     }
 })
 Bootcamp.belongsToMany(User, {
-    through: 'user_bootcamp'
+    through: 'user_bootcamp',
+    foreignKey:'bootcamp_id'
 });
 User.belongsToMany(Bootcamp, {
-    through: 'user_bootcamp'
+    through: 'user_bootcamp',
+    foreignKey: 'user_id'
 });
 export default User;
