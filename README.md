@@ -1,6 +1,6 @@
-# Final Drilling M7
+# Final Drilling M8
 
-Este proyecto implementa una solución para la gestión de usuarios y cursos Bootcamp utilizando Node.js, Sequelize, y una base de datos relacional. El sistema permite registrar usuarios, administrar cursos, y establecer relaciones entre ellos.
+Este proyecto implementa una solución para la gestión de usuarios y cursos Bootcamp a través de una API BanckEnd, utilizando Node.js, Sequelize, express y una base de datos relacional. El sistema permite registrar usuarios, administrar cursos, y establecer relaciones entre ellos.
 
 ## Requisitos
 
@@ -13,8 +13,8 @@ Este proyecto implementa una solución para la gestión de usuarios y cursos Boo
 1. Clona este repositorio:
 
    ```bash
-   git clone https://github.com/soyNelsonValenzuela/Final_Drilling-M7.git
-   cd Final_Drilling-M7
+   git clone https://github.com/soyNelsonValenzuela/final_drilling-M8.git
+   cd finalDrilling_M8
    ```
 
 2.	Instala las dependencias necesarias:
