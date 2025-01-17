@@ -30,6 +30,10 @@ const User = db_bootcamp.define('users', {
             isEmail: true,
             notNull: { "msg": "El campo email es obligatorio" }
         }
+    },
+    password:{
+        type: DataTypes.STRING,
+        allowNull: false,
     }
 })
 Bootcamp.belongsToMany(User, {
