@@ -1,115 +1,218 @@
-# Final Drilling M8
+# Proyecto Final Drilling - M8
 
-Este proyecto implementa una solución para la gestión de usuarios y cursos Bootcamp a través de una API BanckEnd, utilizando Node.js, Sequelize, express y una base de datos relacional. El sistema permite registrar usuarios, administrar cursos, y establecer relaciones entre ellos.
+## Descripción
+Este proyecto es una aplicación backend desarrollada para gestionar usuarios y bootcamps. Implementa autenticación y autorización utilizando JSON Web Tokens (JWT). La base de datos está configurada con Sequelize y utiliza PostgreSQL como sistema gestor de base de datos.
+
+---
 
 ## Requisitos
+- Tener instalado Node.js (versión 14 o superior).
+- Tener instalado npm para la gestión de dependencias.
+- Tener una base de datos relacional creada con PostgreSQL. El nombre de la base de datos debe ser `db_jwtbootcamp`.
 
-- Node.js instalado en tu máquina.
-- Una base de datos configurada y accesible.
-- Los modelos y controladores predefinidos en este repositorio.
+---
 
 ## Instalación
 
-1. Clona este repositorio:
+1. Clonar este repositorio:
 
    ```bash
    git clone https://github.com/soyNelsonValenzuela/final_drilling-M8.git
-   cd finalDrilling_M8
+   cd final_drilling-M8
    ```
 
-2.	Instala las dependencias necesarias:
+2. Instalar las dependencias:
 
-    ```bash
-    npm i
-    ```
+   ```bash
+   npm i
+   ```
 
-3.	Configura la base de datos en el archivo config/db.config.js con los detalles de tu entorno.
+3. Crear un archivo llamado `.env` en la raíz del proyecto y configurar las variables de entorno necesarias, segun el formato que se encuentra en el aarchivo .envexample
+
+- ejemplo:
+
+```
+USER=postgres
+HOST=localhost
+DATABASE=db_jwtbootcamp
+PASSWORD=rootroot
+PORT=5432
+SERVERPORT=3001
+SECRET=SECRETPHRASE
+```
+---
 
 ## Uso
 
-- Inicia el servidor con el siguiente comando en la terminal:
+1. Inicializar la base de datos:
+   
+   ```bash
+   npm run initDb
+   ```
 
-    ```bash
-    npm start
-    ```
+   Este comando sincroniza la base de datos mediante Sequelize y luego crea usuarios, bootcamps y relaciones entre ellos para tener datos iniciales en las tablas.
+
+2. Iniciar el servidor:
+
+   ```bash
+   npm start
+   ```
+
+
+---
 
 ## Funcionalidades
 
-El servidor está dividido en dos grupos principales de funcionalidades:
+- Usar Postman o cualquier cliente HTTP para realizar solicitudes a las rutas definidas.
+- El numero del puerto dependerá del que configures en el archivo `.env`. En este ejemplo utilizaremos el puerto 3001 
 
-**1. Configuración de la Base de Datos**
+### Registrar un usuario (acceso público)
+- **Ruta:** POST `http://localhost:3001/api/signup`
+- **Validaciones:** La contraseña debe tener más de 8 caracteres. El correo electrónico debe ser único en la base de datos. Los campos no pueden estar vacíos.
+- **Body:**
 
-- 1.1 **Conexión a la base de datos**
-Ejecuta la conexión con Sequelize y los modelos definidos:
+  ```json
+  {
+    "firstName": "Nelson",
+    "lastName": "Valenzuela",
+    "email": "nelson@correo.com",
+    "password": "12345678"
+  }
+  ```
+- **Respuesta:**
 
-    ```javascript
-    await index();
-    ```
+  ```json
+  {
+    "message": "Usuario registrado exitosamente",
+    "id": 5,
+    "firstName": "Nelson",
+    "lastName": "Valenzuela",
+    "email": "nelson@correo.com",
+    "password": "<hash>",
+    "createdAt": "<timestamp>",
+    "updatedAt": "<timestamp>"
+  }
+  ```
 
-- 1.2 **Crear usuarios en la tabla** users
-Ejemplo:
+### Inicio de sesión (acceso público)
+- **Ruta:** POST `http://localhost:3001/api/signin`
+- **Validaciones:** El usuario debe estar registrado. Los campos no pueden estar vacíos.
+- **Body:**
 
-    ```javascript
-    const newUser1 = await createUser("Mateo", "Díaz", "mateo.diaz@correo.com");
-    ```
+  ```json
+  {
+    "email": "mateo.diaz@correo.com",
+    "password": "mateo123456"
+  }
+  ```
+- **Respuesta:**
 
-- 1.3 **Crear cursos en la tabla** bootcamps
-Ejemplo:
+  ```json
+  {
+    "id": 1,
+    "firstName": "Mateo",
+    "lastName": "Díaz",
+    "email": "mateo.diaz@correo.com",
+    "accesToken": "<jwt_token>"
+  }
+  ```
 
-    ```javascript
-    const bootcamp1 = await createBootcamp("Introduciendo el bootcamp de React", 10, "React es la librería más usada en JavaScript para el desarrollo de interfaces.");
-    ```
+### Crear un bootcamp (requiere inicio de sesión)
+- **Ruta:** POST `http://localhost:3001/api/bootcamp`
+- **Validaciones:** Los campos no pueden estar vacíos.
+- **Body:**
 
-- 1.4 **Asignar usuarios a los cursos**
-   - Ejemplo:
+  ```json
+  {
+    "title": "Bootcamp de prueba",
+    "cue": 12,
+    "description": "Esta es una descripción de prueba"
+  }
+  ```
+- **Respuesta:**
 
-    ```javascript
-    await addUser(1, 1);
-    ```
+  ```json
+  {
+    "message": "Bootcamp creado exitosamente",
+    "id": 4,
+    "title": "Bootcamp de prueba",
+    "cue": 12,
+    "description": "Esta es una descripción de prueba",
+    "createdAt": "<timestamp>",
+    "updatedAt": "<timestamp>"
+  }
+  ```
 
-**2. Consultas**
+### Agregar un usuario a un bootcamp (requiere inicio de sesión)
+- **Ruta:** POST `http://localhost:3001/api/bootcamp/adduser`
+- **Validaciones:** Los campos no pueden estar vacíos.
+- **Body:**
 
-- 2.1 **Consultar un curso por ID e incluir los usuarios asociados**
-   - Ejemplo:
+  ```json
+  {
+    "idUser": 4,
+    "idBootcamp": 3
+  }
+  ```
+- **Respuesta:**
 
-    ```javascript
-    await findBootcampById(1);
-    ```
+  ```json
+  {
+    "id": 3,
+    "title": "Bootcamp Big Data",
+    "cue": 18,
+    "description": "Domina Data Science y herramientas avanzadas.",
+    "createdAt": "<timestamp>",
+    "updatedAt": "<timestamp>"
+  }
+  ```
 
-- 2.2 **Listar todos los cursos con sus usuarios asociados**
-  - Ejemplo:
+### Listar todos los usuarios (requiere inicio de sesión)
+- **Ruta:** GET `http://localhost:3001/api/user`
+- **Respuesta:** Array de usuarios con sus bootcamps asociados.
 
-    ```javascript
-    await findAllBootcamps();
-    ```
+### Listar usuario por ID (requiere inicio de sesión)
+- **Ruta:** GET `http://localhost:3001/api/user/:id`
+- **Respuesta:** Usuario con su información y los bootcamps asociados.
 
-- 2.3 **Consultar un usuario por ID e incluir los cursos asociados**
-   - Ejemplo:
+### Actualizar usuario por ID (requiere inicio de sesión)
+- **Ruta:** PUT `http://localhost:3001/api/user/:id`
+- **Validaciones:** Validar que el usuario exista. Los campos no pueden estar vacíos.
+- **Body:**
 
-    ```javascript
-    await findUserById(1);
-    ```
+  ```json
+  {
+    "firstName": "Pedro",
+    "lastName": "Sanchez",
+    "email": "pedro.sanchez@correo.com",
+    "password": "pedro123456"
+  }
+  ```
 
-- 2.4 **Listar todos los usuarios con sus cursos asociados**
-   - Ejemplo:
+### Eliminar usuario por ID (requiere inicio de sesión)
+- **Ruta:** DELETE `http://localhost:3001/api/user/:id`
+- **Validaciones:** Validar que el usuario exista.
+- **Respuesta:**
 
-    ```javascript
-    await findAllUsers();
-    ```
+  ```json
+  {
+    "message": "Usuario eliminado exitosamente."
+  }
+  ```
 
-- 2.5 **Actualizar un usuario por ID**
-   - Ejemplo:
+### Listar bootcamp por ID con usuarios inscritos (requiere inicio de sesión)
+- **Ruta:** GET `http://localhost:3001/api/bootcamp/:id`
+- **Respuesta:** Bootcamp con información de los usuarios inscritos.
 
-    ```javascript
-    await updateUserById(1, "Pedro", "Sánchez", "pedro.sanchez@correo.com");
-    ```
+### Listar todos los bootcamps (acceso público)
+- **Ruta:** GET `http://localhost:3001/api/bootcamp`
+- **Respuesta:** Array de bootcamps con usuarios inscritos.
 
-- 2.6 **Eliminar un usuario por ID**
-   - Ejemplo:
+### Cerrar sesión (requiere inicio de sesión)
+- **Ruta:** POST `http://localhost:3001/api/signout`
+- **Respuesta:**
 
-    ```javascript
-    await deleteUserById(1);
-    ```
-## Autor
-
-[Nelson Valenzuela](https://www.linkedin.com/in/nelsonvalenzuelagomez/)
+  ```json
+  {
+    "message": "Sesión cerrada exitosamente."
+  }
